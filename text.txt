@@ -1,0 +1,263 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <fcntl.h>
+
+size_t	ft_strlen(char *c)
+{
+	size_t	i;
+
+	i = 0;
+	if (c == NULL)
+		return (0);
+	while (c[i])
+		i++;
+	return (i);
+}
+
+
+size_t	ft_strlcpy(char *str1, char *str2, size_t c)
+{
+	size_t	i;
+	int		l;
+
+	l = ft_strlen(str2);
+	i = 0;
+	if (c > 0)
+	{
+		while (str2[i] != '\0' && i < (c - 1))
+		{
+			str1[i] = str2[i];
+			i++;
+		}
+		str1[i] = '\0';
+	}
+	return (l);
+}
+
+char	*ft_strjoin(char *s1, char *s2)
+{
+	char	*stringa;
+	size_t	len1;
+	size_t	len2;
+	size_t	lenofstringa;
+
+	
+	len1 = ft_strlen(s1);
+	len2 = ft_strlen(s2);
+	lenofstringa = len1 + len2;
+	if (lenofstringa == 0)
+		return (NULL);
+	stringa = (char *)malloc(sizeof(char) * (lenofstringa + 1));
+	if (!stringa)
+		return (NULL);
+	if (s1 != NULL)
+		ft_strlcpy(stringa, s1, len1 + 1);
+	ft_strlcpy(&stringa[len1], s2, len2 + 1);
+	return (stringa);
+}
+
+char	*ft_strdup(char *src)
+{
+	char	*dst;
+	size_t	length;
+	size_t	i;
+
+	length = ft_strlen(src);
+	dst = (char *)malloc((length + 1) * sizeof(char));
+	if (dst == NULL)
+		return (NULL);
+	i = 0;
+	while (src[i] != '\0')
+	{
+		dst[i] = src[i];
+		i++;
+	}
+	dst[i] = '\0';
+	return (dst);
+}
+
+char	*ft_strchr(const char *str, int c)
+{
+	int		i;
+
+	i = 0;
+	while (str[i])
+	{
+		if (str[i] == (char)c)
+			return ((char *)&str[i]);
+		i++;
+	}
+	if (str[i] == (char)c)
+		return ((char *)&str[i]);
+	return (NULL);
+}
+
+static int	ft_find_nl(char *buffer)
+{
+	int	i;
+
+	i = 0;
+	while (buffer[i])
+	{
+		if (buffer[i] == '\n')
+			return (i);
+		i++;
+	}
+	return (0);
+}
+
+static char	*ft_buffer_process(int fd, char *stat_buffer)
+{
+	size_t	total_bytes;
+	size_t	nlpos;
+	char *temp_reader;
+	char *temp_buffer;
+
+/* 	if (!stat_buffer)
+	{
+		stat_buffer = (char *)malloc(1);
+		if (!stat_buffer)
+			return (NULL);  // Error handling if malloc fails
+		stat_buffer[0] = '\0';  // Empty string initialization
+	}
+ */
+
+	temp_reader = (char *)malloc(42 + 1);
+	if (!temp_reader)
+		return (NULL);
+		
+	total_bytes = 1;
+	while (total_bytes > 0)
+	{
+		total_bytes = read(fd, temp_reader, 42);
+		if (total_bytes < 0)
+			return (NULL);
+		temp_reader[total_bytes] = '\0';
+		temp_buffer = stat_buffer;
+		printf("sa \n");
+		stat_buffer  = ft_strjoin(stat_buffer, temp_reader);
+		free(temp_buffer);
+		if (stat_buffer == NULL)
+			return (free(temp_reader), NULL);
+		nlpos = ft_find_nl(stat_buffer);
+		if (nlpos != 0)
+			break ;
+	}
+	
+	free(temp_reader);
+	return(stat_buffer);
+}
+
+char		*ft_extractor(char *buffer)
+{
+	char	*line;
+	//char	*new_buff;
+	int		nlpos;
+	int		i;
+
+	nlpos = 0;
+	while (buffer[nlpos]!= '\0' && buffer[nlpos] != '\n')
+		nlpos++;
+	if (buffer[nlpos]== '\0')
+		nlpos = nlpos + 1;
+	else
+		nlpos = nlpos + 2;
+	line = (char *)malloc(nlpos);
+	if (!line)
+		return (NULL);
+	i = 0;
+	while (buffer[i]!= '\0' && buffer[i] != '\n')
+	{
+		line[i] = buffer[i];
+		i++;
+	}
+	if (buffer[i] == '\n')
+	{
+		line[i] = buffer[i];
+		i++;
+	}
+	line[i] = '\0';
+	//if (buffer[nlpos] == '\n')
+	//	new_buff = ft_strdup(buffer + nlpos + 1);
+	//else
+	//	new_buff = NULL;
+	free(buffer);
+	//buffer = new_buff;
+	return (line);
+}
+
+char		*get_next_line(int fd)
+{
+	static char	*stat_buffer;
+	char		*temp_buffer;
+	//char		*temp_reader;
+
+	//temp_reader = NULL;
+	if (fd < 0 || 42 <= 0)
+	{
+/* 		free(stat_buffer);
+		stat_buffer = NULL; */
+		return (NULL);
+	}
+	printf("Hello %s /n", stat_buffer);
+	//temp_reader = (char *)malloc((42 + 1) * sizeof(char));
+	//if (!temp_reader)
+	//	return (NULL);
+	temp_buffer = ft_buffer_process(fd, stat_buffer);//, temp_reader
+	printf("%s", temp_buffer);
+	if (!temp_buffer)
+		return (NULL);
+	//free(temp_reader);
+	stat_buffer = ft_strchr(temp_buffer, '\n');
+	
+	temp_buffer = ft_extractor(temp_buffer);
+	return (temp_buffer);
+}
+
+/* int main(void)
+{
+	char str[20] = "WTF IS A KOLIMETOR?";
+	char *str1;
+
+	str1 = ft_strchr(str, 'K');
+	printf("%s\n", str1);
+	return (0);
+} */
+
+int main(void)
+{
+    int     fd;
+    char    *line;
+
+	printf("%d\n", 42);
+    fd = open("text.txt", O_RDONLY);
+    if (fd == -1)
+    {
+        perror("Error opening file");
+        return (1);
+    }
+    line = get_next_line(fd);
+    printf("buffer proc:%s\n ", line);
+    free(line);
+
+    line = get_next_line(fd);
+    printf("%s ", line);
+    free(line);
+
+    line = get_next_line(fd);
+    printf("%s ", line);
+    free(line);
+
+    line = get_next_line(fd);
+    printf("%s \n", line);
+    free(line);
+
+    line = get_next_line(fd);
+    printf("%s \n", line);
+    free(line);
+    
+    close(fd);
+    return (0);
+}
+/**/
