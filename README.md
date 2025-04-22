@@ -36,6 +36,6 @@ Unlike most implementations, this version doesn't depend on `libft`. Instead, al
 ```bash
 git clone https://github.com/yourusername/get_next_line.git
 cd get_next_line
-
+```
 
 ![alt text](image.png)
